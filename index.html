@@ -1,295 +1,149 @@
-<!doctype html>
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title></title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- <link rel="stylesheet" type="text/css" href="hexagons.css"> -->
-  <link href='https://fonts.googleapis.com/css?family=Raleway:300' rel='stylesheet' type='text/css'>
+<meta charset="UTF-8">
+<title>MADE BY VANDERHOORN</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+/* ---------- Global reset ---------- */
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+body {
+  /* font-family:Arial,Helvetica,sans-serif; */
+  font-family: 'Cambria';
+  background:#cfcfcf;
+  color:#333;
+}
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-    }
+/* ---------- Header ---------- */
+header{
+  background:#006688;
+  color:#fff;
+  padding:1.5rem 1rem;
+  text-align:center;
+}
+header h1{font-size:2rem;}
 
-    body {
-      background: rgb(123, 158, 158);
-    }
+/* ---------- Gallery layout ---------- */
+.gallery{
+  display:grid;
+  gap:1rem;
+  padding:1rem;
+  max-width:1200px;
+  margin:auto;
+}
+@media (min-width:600px){ .gallery{grid-template-columns:repeat(2,1fr);} }
+@media (min-width:900px){ .gallery{grid-template-columns:repeat(3,1fr);} }
+@media (min-width:1200px){ .gallery{grid-template-columns:repeat(4,1fr);} }
 
-    /* --------------------------------------------------------------
-           Header – new colour here
-        -------------------------------------------------------------- */
-    header {
-      text-align: center;
-      padding: 2rem 1rem;
-      background: #006688;
-      /* ← change this value to any colour you prefer */
-      color: #fff;
-      /* keep text readable on the dark background */
-      border-bottom: 1px solid #004c5a;
-    }
+/* ---------- Card (image box) ---------- */
+.card{
+  position:relative;
+  overflow:hidden;
+  border-radius:12px;
+  cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 6px 12px rgba(0,0,0,.2);
+}
+.card img{
+  display:block;
+  width:100%;
+  height:auto;
+}
 
-    header h1 {
-      font-weight: 600;
-      margin: 0;
-    }
+/* ----- Hover overlay (top‑bottom wipe) ----- */
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  /* Two linear gradients – one from the top, one from the bottom.
+     They start with 0% height (invisible) and expand to 50% each side on hover. */
+  background:
+    linear-gradient(to bottom, rgba(0, 128, 128, 0.8) 70%, transparent 90%) top,
+    linear-gradient(to top,    rgba(0, 128, 128, 0.8) 70%, transparent 90%) bottom;
+  background-repeat:no-repeat;
+  background-size:100% 0%;          /* height = 0% initially */
+  transition:background-size .35s ease;
+}
 
-    header hr {
-      width: 60%;
-      margin: 1.5rem auto;
-      border: none;
-      border-top: 2px solid #fff;
-      /* white line works well on the dark header */
-    }
+/* When hovering, each gradient grows to cover half the card,
+   meeting in the centre. */
+.card:hover::before{
+  background-size:100% 50%;        /* 50% from top + 50% from bottom = full height */
+}
 
-    #hexGrid {
-      display: flex;
-      flex-wrap: wrap;
-      width: 90%;
-      margin: 0 auto;
-      overflow: hidden;
-      font-family: 'Raleway', sans-serif;
-      font-size: 15px;
-      list-style-type: none;
-      justify-content: center;
-    }
+/* ----- Caption (visible on hover) ----- */
+.caption{
+  font-family: 'Cambria';
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:#000000;
+  text-argb(0, 0, 0):center;
+  opacity:0;
+  transition:opacity .3s ease;
+}
+.card:hover .caption{opacity:1;}
 
-    .hex {
-      position: relative;
-      visibility: hidden;
-      outline: 1px solid transparent;
-      /* fix for jagged edges in FF on hover transition */
-    }
-
-    .hex::after {
-      content: '';
-      display: block;
-      padding-bottom: 86.602%;
-      /* =  100 / tan(60) * 1.5 */
-    }
-
-    .hexIn {
-      position: absolute;
-      width: 96%;
-      padding-bottom: 110.851%;
-      /* =  width / sin(60) */
-      margin: 0 2%;
-      overflow: hidden;
-      visibility: hidden;
-      outline: 1px solid transparent;
-      /* fix for jagged edges in FF on hover transition */
-      -webkit-transform: rotate3d(0, 0, 1, -60deg) skewY(30deg);
-      -ms-transform: rotate3d(0, 0, 1, -60deg) skewY(30deg);
-      transform: rotate3d(0, 0, 1, -60deg) skewY(30deg);
-    }
-
-    .hexIn * {
-      position: absolute;
-      visibility: visible;
-      outline: 1px solid transparent;
-      /* fix for jagged edges in FF on hover transition */
-    }
-
-    .hexLink {
-      display: block;
-      width: 100%;
-      height: 100%;
-      text-align: center;
-      color: #fff;
-      overflow: hidden;
-      -webkit-transform: skewY(-30deg) rotate3d(0, 0, 1, 60deg);
-      -ms-transform: skewY(-30deg) rotate3d(0, 0, 1, 60deg);
-      transform: skewY(-30deg) rotate3d(0, 0, 1, 60deg);
-    }
-
-    /*** HEX CONTENT **********************************************************************/
-    .hex img {
-      left: -100%;
-      right: -100%;
-      width: auto;
-      height: 100%;
-      margin: 0 auto;
-      -webkit-transform: rotate3d(0, 0, 0, 0deg);
-      -ms-transform: rotate3d(0, 0, 0, 0deg);
-      transform: rotate3d(0, 0, 0, 0deg);
-    }
-
-    .hex h1,
-    .hex p {
-      width: 100%;
-      padding: 5%;
-      box-sizing: border-box;
-      background-color: rgba(0, 128, 128, 0.8);
-      font-weight: 300;
-      -webkit-transition: -webkit-transform .2s ease-out, opacity .3s ease-out;
-      transition: transform .2s ease-out, opacity .3s ease-out;
-    }
-
-    .hex h1 {
-      bottom: 50%;
-      padding-top: 50%;
-      font-size: 1.5em;
-      z-index: 1;
-      -webkit-transform: translate3d(0, -100%, 0);
-      -ms-transform: translate3d(0, -100%, 0);
-      transform: translate3d(0, -100%, 0);
-    }
-
-    .hex h1::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 45%;
-      width: 10%;
-      text-align: center;
-      border-bottom: 1px solid #fff;
-    }
-
-    .hex p {
-      top: 50%;
-      padding-bottom: 50%;
-      -webkit-transform: translate3d(0, 100%, 0);
-      -ms-transform: translate3d(0, 100%, 0);
-      transform: translate3d(0, 100%, 0);
-    }
-
-
-    /*** HOVER EFFECT  **********************************************************************/
-    .hexLink:hover h1,
-    .hexLink:focus h1,
-    .hexLink:hover p,
-    .hexLink:focus p {
-      -webkit-transform: translate3d(0, 0, 0);
-      -ms-transform: translate3d(0, 0, 0);
-      transform: translate3d(0, 0, 0);
-    }
-
-    /*** HEXAGON SIZING AND EVEN ROW INDENTATION *****************************************************************/
-    @media (min-width:1201px) {
-
-      /* <- 5-4  hexagons per row */
-      #hexGrid {
-        padding-bottom: 4.4%
-      }
-
-      .hex {
-        width: 20%;
-        /* = 100 / 5 */
-      }
-
-      .hex:nth-child(9n+6) {
-        /* first hexagon of even rows */
-        margin-left: 10%;
-        /* = width of .hex / 2  to indent even rows */
-      }
-    }
-
-    @media (max-width: 1200px) and (min-width:901px) {
-
-      /* <- 4-3  hexagons per row */
-      #hexGrid {
-        padding-bottom: 5.5%
-      }
-
-      .hex {
-        width: 25%;
-        /* = 100 / 4 */
-      }
-
-      .hex:nth-child(7n+5) {
-        /* first hexagon of even rows */
-        margin-left: 12.5%;
-        /* = width of .hex / 2  to indent even rows */
-      }
-    }
-
-    @media (max-width: 900px) and (min-width:601px) {
-
-      /* <- 3-2  hexagons per row */
-      #hexGrid {
-        padding-bottom: 7.4%
-      }
-
-      .hex {
-        width: 33.333%;
-        /* = 100 / 3 */
-      }
-
-      .hex:nth-child(5n+4) {
-        /* first hexagon of even rows */
-        margin-left: 16.666%;
-        /* = width of .hex / 2  to indent even rows */
-      }
-    }
-
-    @media (max-width: 600px) {
-
-      /* <- 2-1  hexagons per row */
-      #hexGrid {
-        padding-bottom: 11.2%
-      }
-
-      .hex {
-        width: 50%;
-        /* = 100 / 3 */
-      }
-
-      .hex:nth-child(3n+3) {
-        /* first hexagon of even rows */
-        margin-left: 25%;
-        /* = width of .hex / 2  to indent even rows */
-      }
-    }
-
-    @media (max-width: 400px) {
-      #hexGrid {
-        font-size: 13px;
-      }
-    }
-  </style>
-
+/* Title & subtitle styling */
+.caption .title{font-size:1.5rem;font-weight:500;}
+.caption .subtitle{
+  font-size:1.0rem;
+  font-weight:300;
+  margin-top:0.3rem;
+}
+</style>
 </head>
 
-
 <body>
-  <header>
 
-    <h1 style="text-align:center">VAN DER HOORN</h1>
-    <h2 style="text-align:center">Projects</h1>
+<header>
+  <h1>MADE BY VANDERHOORN</h1>
+</header>
 
-  </header>
-  </br>
-  <ul id="hexGrid">
-    <li class="hex">
-      <div class="hexIn">
-        <a class="hexLink" href="https://svdhoorn.github.io/runninghexagons/" target="_blank">
-          <img src="images/IMG_RunningHexagons.PNG" alt="" />
-          <h1>Running Hexagons</h1>
-          <p>Where did I run</p>
+<section class="gallery">
+  <!-- Card 1 -->
+  <div class="card">
+    <a href="https://svdhoorn.github.io/runninghexagons/" target="_blank" rel="noopener noreferrer">
+    <img src="images/runninghexagons.PNG" alt="Running Hexagons">
+    <div class="caption">
+      <span class="title">Running Hexagons</span> 
+      <span class="subtitle">Where did I run</span>
+    </div>
+    </a>
+  </div>
+
+
+  <!-- Card 2 -->
+  <div class="card">
+    <a href="https://svdhoorn.github.io/runningregions/" target="_blank" rel="noopener noreferrer">
+    <img src="images/runningregions.PNG" alt="Running Regions">
+    <div class="caption">
+      <span class="title">Running Regions</span> 
+      <span class="subtitle">Which regions did I run</span>
+    </div>
         </a>
-      </div>
-    </li>
-    <li class="hex">
-      <div class="hexIn">
-        <a class="hexLink" href="https://svdhoorn.github.io/runningregions/" target="_blank">
-          <img src="images/runningregions.PNG" alt="" />
-          <h1>Running Regions</h1>
-          <p>Which regions did I run</p>
-        </a>
-      </div>
-    </li>
-    <li class="hex">
-      <div class="hexIn">
-        <a class="hexLink" href="https://svdhoorn.github.io/runningklompenpaden/" target="_blank">
-          <img src="images/runningklompenpaden.png" alt="" />
-          <h1>Running Klompenpaden</h1>
-          <p>Which klompenpaden did I run</p>
-        </a>
-      </div>
-    </li>
-  </ul>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="card">
+        <a href="https://svdhoorn.github.io/runningklompenpaden/" target="_blank" rel="noopener noreferrer">
+    <img src="images/runningklompenpaden.png" alt="Running Klompenpaden">
+    <div class="caption">
+      <span class="title">Running Klompenpaden</span> 
+      <span class="subtitle">Which klompenpaden did I run</span>
+    </div>
+            </a>
+  </div>
+
+  <!-- Add more .card blocks as needed -->
+</section>
+
 </body>
-
 </html>
